@@ -35,6 +35,21 @@ class Token:
     def __repr__(self):
         return f'<term: {self.__term}, doc_ids: {self.__doc_ids}>'
 
+    def __eq__(self, other):
+        return self.__term.__eq__(other)
+
+    def __le__(self, other):
+        return self.__term.__le__(other)
+
+    def __lt__(self, other):
+        return self.__term.__lt__(other)
+
+    def __ge__(self, other):
+        return self.__term.__ge__(other)
+
+    def __gt__(self, other):
+        return self.__term.__gt__(other)
+
 
 def index_file(c: str, data_: bytearray):
 
@@ -43,7 +58,7 @@ def index_file(c: str, data_: bytearray):
 
 
 def per_alphabet():
-    return 'آابپتثحخدذرزژسشصضطظعغفقکگلمنوهیئء'
+    return 'آابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهیئء'
 
 
 def per_regex():
@@ -80,13 +95,13 @@ def parser_dict(df: pd.DataFrame, col: str, doc_ic: str, comp, num=-1) -> dict:
     return buff_dict
 
 
-def storing():
+def storing(dict_of_token: dict):
     os.makedirs(DICT_SAVING_PATH_NAME, exist_ok=True)
 
     for c in per_alphabet():
         os.makedirs(f'{DICT_SAVING_PATH_NAME}\\{c}_{DICT_SAVING_PATH_NAME}', exist_ok=True)
 
-    for term, token in p.items():
+    for term, token in dict_of_token.items():
         with open(f'{DICT_SAVING_PATH_NAME}\\'
                   f'{term[0]}_{DICT_SAVING_PATH_NAME}\\{term}_posting_list.txt', 'at') as out_put:
             out_put.write(','.join(map(lambda x: str(x), t.get_doc_ids())))
@@ -107,21 +122,5 @@ if __name__ == '__main__':
         out_put.write(s)
     with open(f'{DICT_SAVING_PATH_NAME}\\dict_info', 'ab') as out_put:
         out_put.write(t)
-    # print(t)
-
-    # os.makedirs('dictLib', exist_ok=True)
-    #
-    # for c in per_alphabet():
-    #     os.makedirs(f'dictLib\\{c}_dictLib', exist_ok=True)
-    #
-    # for k, t in p.items():
-    #     with open(f'dictLib\\{k[0]}_dictLib\\{k}_posting_list.txt', 'at') as out_put:
-    #         out_put.write(','.join(map(lambda x: str(x), t.get_doc_ids())))
-    #
-    # print('done')
-
-    # with open('dict.txt', 'wb') as out_put:
-    #     out_put.write(bytearray(p.items().__str__(), encoding='UTF-8'))
-
 
 
