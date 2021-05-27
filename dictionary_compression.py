@@ -13,24 +13,32 @@ def calculate_pointer_term_length(length: int, per=True) -> int:
         return ceil(log2(length * AVERAGE_WORD_LENGTH * 1) / 8)
 
 
-def extract_dict_as_string(dict_as_str: bytearray, dict_info: bytearray, k: int) -> (list, list, list):
+def decompress_dictionary(dict_as_str: bytearray, dict_info: bytearray, k: int = K_SEGMENT) -> (list, list, list):
+    """
+    items, frequency, posting_list
+    :param dict_as_str:
+    :param dict_info:
+    :param k:
+    :return:
+    """
     pointer_term_length = calculate_pointer_term_length(len(dict_as_str))
     info_pointer = 0
     items = list()
     frequency = list()
     posting_list = list()
 
-    block_siz = FREQUENCY_LENGTH + POINTER_POSTING_LIST_LENGTH + pointer_term_length + 3 * \
-                (FREQUENCY_LENGTH + POINTER_POSTING_LIST_LENGTH + 1)
-
     seg = 0
-    while len(dict_info[info_pointer:]) < block_siz:
+    while info_pointer < len(dict_info):
 
         if seg % k == 0:
-            frequency.append(dict_info[info_pointer: info_pointer + FREQUENCY_LENGTH])
+            frequency.append(
+                int.from_bytes(dict_info[info_pointer: info_pointer + FREQUENCY_LENGTH], 'big')
+            )
             info_pointer += FREQUENCY_LENGTH
 
-            posting_list.append(dict_info[info_pointer: info_pointer + POINTER_POSTING_LIST_LENGTH])
+            posting_list.append(
+                int.from_bytes(dict_info[info_pointer: info_pointer + POINTER_POSTING_LIST_LENGTH], 'big')
+            )
             info_pointer += POINTER_POSTING_LIST_LENGTH
 
             info_pointer += pointer_term_length
@@ -39,10 +47,14 @@ def extract_dict_as_string(dict_as_str: bytearray, dict_info: bytearray, k: int)
 
         else:
 
-            frequency.append(dict_info[info_pointer: info_pointer + FREQUENCY_LENGTH])
+            frequency.append(
+                int.from_bytes(dict_info[info_pointer: info_pointer + FREQUENCY_LENGTH], 'big')
+            )
             info_pointer += FREQUENCY_LENGTH
 
-            posting_list.append(dict_info[info_pointer: info_pointer + POINTER_POSTING_LIST_LENGTH])
+            posting_list.append(
+                int.from_bytes(dict_info[info_pointer: info_pointer + POINTER_POSTING_LIST_LENGTH], 'big')
+            )
             info_pointer += POINTER_POSTING_LIST_LENGTH
 
             info_pointer += 1
@@ -53,14 +65,16 @@ def extract_dict_as_string(dict_as_str: bytearray, dict_info: bytearray, k: int)
     while term_pointer < len(dict_as_str):
         term_len = dict_as_str[term_pointer]
 
-        items.append(dict_as_str[term_pointer: term_pointer + term_len])
+        term_pointer += 1
+
+        items.append(dict_as_str[term_pointer: term_pointer + term_len].decode())
 
         term_pointer += term_len
 
     return items, frequency, posting_list
 
 
-def make_dict_as_string(items: list, frequency: list, posting_list: list, k: int = 4) -> (bytearray, bytearray):
+def compress_dictionary(items: list, frequency: list, posting_list: list, k: int = K_SEGMENT) -> (bytearray, bytearray):
     """
     index block:
         frequency - pointer to posting list - pointer to term in dict_as_str (point to length of term) +
@@ -94,16 +108,16 @@ def make_dict_as_string(items: list, frequency: list, posting_list: list, k: int
         dict_info += posting_list[items.index(i)].to_bytes(length=POINTER_POSTING_LIST_LENGTH, byteorder='big')
 
         if seg % k == 0:
-            dict_info += (current_pointer + 1). \
+            dict_info += current_pointer. \
                 to_bytes(length=POINTER_TERM_LENGTH, byteorder='big')  # POINTER_TERM_LENGTH bytes
 
             seg = 1  # 1-> seg
+            current_pointer += POINTER_TERM_LENGTH
         else:
             dict_info += seg.to_bytes(length=1, byteorder='big')  # 1 byte
 
             seg += 1  # seg == 1, 2 , ..., k-1
-
-        current_pointer += dict_as_str[current_pointer] + 1
+            current_pointer += 1
 
     return dict_as_str, bytearray(dict_info)
 

@@ -27,7 +27,7 @@ def compress_posting_list(list_of_doc_ids: list) -> bytearray:
     list_of_bytes = bytearray(0)
 
     for doc_id in list_of_doc_ids:
-        print(variable_byte(doc_id - prev), doc_id - prev)
+        # print(variable_byte(doc_id - prev), doc_id - prev)
         list_of_bytes += variable_byte(doc_id - prev)
         prev = doc_id
 
@@ -55,8 +55,4 @@ def decompress_posting_list(byt_posting_list: bytearray):
 
 
 if __name__ == '__main__':
-    print(int.to_bytes(100, 1, 'big'))
-    a = [2, 12, 27, 127, 1127, 4127]
-    p = compress_posting_list(a)
-    print(p)
-    print(decompress_posting_list(p))
+    pass
