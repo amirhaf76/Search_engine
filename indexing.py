@@ -1,8 +1,7 @@
 import re
 import pandas as pd
 import time
-from storing_dict import make_dict_as_string
-
+from tools import merge_sort, merge_list_tuple
 import os
 
 DICT_SAVING_PATH_NAME = 'dictLib'
@@ -85,7 +84,6 @@ def parser_dict(df: pd.DataFrame, col: str, doc_ic: str, comp, num=-1) -> dict:
 
     for i in range(num):
         temp = comp.findall(df[col].iloc[i])
-        words_num = len(temp)
         for t in temp:
             if not buff_dict.__contains__(t):
                 buff_dict[t] = Token(int(df[doc_ic].iloc[i]), t)
@@ -93,6 +91,28 @@ def parser_dict(df: pd.DataFrame, col: str, doc_ic: str, comp, num=-1) -> dict:
                 buff_dict[t].add_doc_id(int(df[doc_ic].iloc[i]))
 
     return buff_dict
+
+
+def parser_list(df: pd.DataFrame, col: str, doc_id: str, comp, num=-1) -> list:
+
+    if not df.__contains__(col):
+        raise Exception(f'df doesn\'t have column {col}')
+    elif not df.__contains__(doc_id):
+        raise Exception(f'df doesn\'t have column {doc_id}')
+
+    list_of_term_id = list()
+
+    if num == -1:
+        num = len(df)
+
+    for i in range(num):
+        tokens = comp.findall(df[col].iloc[i])
+        for t in tokens:
+            list_of_term_id.append(
+                (t, int(df[doc_id].iloc[i]))
+            )
+
+    return list_of_term_id
 
 
 def storing(dict_of_token: dict):
@@ -104,23 +124,21 @@ def storing(dict_of_token: dict):
     for term, token in dict_of_token.items():
         with open(f'{DICT_SAVING_PATH_NAME}\\'
                   f'{term[0]}_{DICT_SAVING_PATH_NAME}\\{term}_posting_list.txt', 'at') as out_put:
-            out_put.write(','.join(map(lambda x: str(x), t.get_doc_ids())))
+            out_put.write(','.join(map(lambda x: str(x), term.get_doc_ids())))
 
 
 if __name__ == '__main__':
     # print(per_alpha())
 
     fin = pd.read_csv('IR_Spring2021_ph12_7k.csv')
-    start = time.time()
-    p = parser_dict(fin, 'content', 'id', re.compile(per_regex()), 30)
-    print(time.time() - start)
-    oo = list(map(lambda x: len(x.get_doc_ids()), p.values()))
-    print(oo)
-    s, t = make_dict_as_string(list(p.keys()), len(p.keys())*[5],
-                               oo)
-    with open(f'{DICT_SAVING_PATH_NAME}\\dict', 'ab') as out_put:
-        out_put.write(s)
-    with open(f'{DICT_SAVING_PATH_NAME}\\dict_info', 'ab') as out_put:
-        out_put.write(t)
 
+    start = time.time()
+    p = parser_list(fin, 'content', 'id', re.compile(per_regex()), 30)
+    merge_sort(p, merge_func=merge_list_tuple)
+    print(time.time() - start)
+    print(p)
+    # oo = list(map(lambda x: len(x.get_doc_ids()), p.values()))
+    # print(oo)
+    # s, t = make_dict_as_string(list(p.keys()), len(p.keys())*[5],
+    #                            oo)
 
