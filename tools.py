@@ -189,15 +189,15 @@ def intersection(doc_ids_lists: list, similarity_count=None):
 
 if __name__ == '__main__':
 
-    # a = merge_lists_without_repetition(list(range(0, 50, 2)), list(range(0, 40, 5)))
-    # print(a)
-
-    a = [list(range(11)),
-         list(range(0, 11, 2)),
-         list(range(0, 11, 3))]
+    a = merge_lists(list(range(0, 50, 2)), list(range(0, 40, 5)), repetition=True)
     print(a)
-    b = intersection(a)
-    print(b)
+
+    # a = [list(range(11)),
+    #      list(range(0, 11, 2)),
+    #      list(range(0, 11, 3))]
+    # print(a)
+    # b = intersection(a)
+    # print(b)
 
     # c = list(range(100))
     # t = 20*list('timeo'.__iter__())

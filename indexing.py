@@ -1,13 +1,16 @@
 import re
 import pandas as pd
-import time
-from tools import merge_sort, merge_list_tuple, merge_lists
+from tools import merge_lists, merge_sort
 import os
 from posting_list_compression import compress_posting_list, decompress_posting_list
-from dictionary_compression import compress_dictionary, decompress_dictionary, POINTER_POSTING_LIST_LENGTH
+from dictionary_compression import compress_dictionary, POINTER_POSTING_LIST_LENGTH
 
 POSTING_LIST_SAVING_PATH_NAME = 'posting_lists'
 DICTIONARY_SAVING_PATH_NAME = 'dict_list'
+
+
+def posting_list_name_file(term: str):
+    return f'{term}_posting_list'
 
 
 class Token:
@@ -138,7 +141,7 @@ def save_dict_posting_lists(dict_of_token: dict, merging=True):
 
     for term, token in dict_of_token.items():
         path = f'{POSTING_LIST_SAVING_PATH_NAME}' + os.sep + f'{term[0]}_{POSTING_LIST_SAVING_PATH_NAME}'
-        name = f'{term}_posting_list'
+        name = posting_list_name_file(term)
 
         if name in os.listdir(path):
             mode = 'r'
@@ -220,12 +223,57 @@ def save_list_dictionary(term_list: list, freq_list: list, pointer_list: list):
         out_put.write(dict_info)
 
 
+def load_dictionary_bytes():
+    """
+    dict_as_str, dict_info
+    :return:
+    """
+    dict_as_str = None
+    dict_info = None
+
+    try:
+        path = f'{DICTIONARY_SAVING_PATH_NAME}'
+        name = f'dict_as_str'
+        fin = open(path + os.sep + name, 'rb')
+        dict_as_str = fin.read()
+        fin.close()
+    except IOError:
+        print('[Search Engine][Error] dict_as_str file isn\'t available!')
+
+    try:
+        path = f'{DICTIONARY_SAVING_PATH_NAME}'
+        name = f'dict_info'
+        fin = open(path + os.sep + name, 'rb')
+        dict_info = fin.read()
+        fin.close()
+    except IOError:
+        print('[Search Engine][Error] dict_info isn\'t available!')
+
+    return bytearray(dict_as_str), bytearray(dict_info)
+
+
+def load_posting_list(term: str):
+    posting_list = None
+    try:
+        path = f'{POSTING_LIST_SAVING_PATH_NAME}' + os.sep + f'{term[0]}_{POSTING_LIST_SAVING_PATH_NAME}'
+        print(path)
+        name = f'{term}_posting_list'
+        print(name)
+        fin = open(path + os.sep + name, 'rb')
+        posting_list = fin.read()
+        fin.close()
+    except IOError:
+        print(f'[Search Engine][Error] {term} file isn\'t available!')
+
+    return bytearray(posting_list)
+
+
+# Todo filtering terms
 def filter_terms(lis_of_terms: dict) -> None:
     pass
 
 
 def preprocess(file_name: str, num: int):
-
     file_in = pd.read_csv(file_name)
 
     read_file = 0
@@ -242,28 +290,30 @@ def preprocess(file_name: str, num: int):
         if not read_file == 100:
             merging = True
 
-        save_dict_posting_lists(terms_ids, merging=merging)
-
         for k, v in terms_ids.items():
             if term_dict.__contains__(k):
-                temp_list = merge_lists(term_dict[k].get_doc_ids(), v.get_doc_ids(), repetition=False)
-                terms_ids[k] = temp_list
+                term_dict = merge_lists(term_dict[k], v, repetition=False)
             else:
                 term_dict[k] = v
-
     # print(term_dict)
-    items_list = sorted(term_dict)
-    freq_list = []
-    pointer_list = []
+    save_dict_posting_lists(term_dict, merging=merging)
+    #
+    # # print(term_dict)
+    items_list = list(term_dict.keys())
+    merge_sort(items_list)
+    print(term_dict[items_list[1]])
+    print(items_list)
+    print(items_list[1])
+    # freq_list = []
+    # pointer_list = []
+    #
+    # for t in items_list:
+    #     freq_list.append(len(term_dict[t]))
+    #     pointer_list.append(POINTER_POSTING_LIST_LENGTH)
+    # save_list_dictionary(items_list, freq_list, pointer_list)
 
-    for t in items_list:
-        freq_list.append(len(term_dict[t]))
-        pointer_list.append(POINTER_POSTING_LIST_LENGTH)
-    save_list_dictionary(items_list, freq_list, pointer_list)
-
-    print(f'preprocessing is done')
+    print(f'Pre-processing is done')
 
 
 if __name__ == '__main__':
     preprocess('IR_Spring2021_ph12_7k.csv', 100)
-
