@@ -72,7 +72,7 @@ def merge(list_of: list, r_1, h_1, r_2, h_2):
     list_of[start: h_2+1] = temp
 
 
-def merge_lists_without_repetition(list_1: list, list_2: list):
+def merge_lists(list_1: list, list_2: list, repetition=False):
     r_1 = 0
     r_2 = 0
     h_1 = len(list_1) - 1
@@ -90,7 +90,8 @@ def merge_lists_without_repetition(list_1: list, list_2: list):
         else:
             temp.append(list_1[r_1])
             r_1 += 1
-            r_2 += 1
+            if not repetition:
+                r_2 += 1
 
     while r_1 <= h_1:
         temp.append(list_1[r_1])
