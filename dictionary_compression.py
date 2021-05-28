@@ -88,7 +88,7 @@ def compress_dictionary(items: list, frequency: list, posting_list: list, k: int
     :param frequency:
     :param posting_list:
     :param k:
-    :return:
+    :return: dict_as_str, dict_info
     """
     dict_as_str = bytes(0)
     dict_info = bytes(0)
