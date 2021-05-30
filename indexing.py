@@ -63,7 +63,7 @@ def make_index_file(c: str, data_: bytearray):
 
 
 def per_alphabet():
-    return 'آابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهیئء'
+    return 'آأابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهیئ‌كءي'
 
 
 def per_regex():
@@ -133,7 +133,7 @@ def parser_list(df: pd.DataFrame, col: str, doc_id: str, comp, num=-1) -> list:
     return list_of_term_id
 
 
-def save_dict_posting_lists(dict_of_token: dict, merging=True):
+def save_dict_posting_lists(dict_of_token: dict):
     os.makedirs(POSTING_LIST_SAVING_PATH_NAME, exist_ok=True)
 
     for c in per_alphabet():
@@ -150,14 +150,18 @@ def save_dict_posting_lists(dict_of_token: dict, merging=True):
 
         with open(path + os.sep + name, f'{mode}b+') as out_put:
 
-            if merging:
+            if name in os.listdir(path):
+
                 li = decompress_posting_list(bytearray(out_put.read()))
                 out_put.seek(0, 0)
-                merge_lists(li, token)
-                out_put.write(compress_posting_list(token))
+                new_list = merge_lists(li, token)
+                out_put.write(compress_posting_list(new_list))
+                if term == 'آب':
+                    print(li)
+                    print(token)
+                    print(new_list)
 
             else:
-                out_put.seek(0, 2)
                 out_put.write(compress_posting_list(token))
 
 
@@ -234,18 +238,26 @@ def load_dictionary_bytes():
     try:
         path = f'{DICTIONARY_SAVING_PATH_NAME}'
         name = f'dict_as_str'
+
         fin = open(path + os.sep + name, 'rb')
+
         dict_as_str = fin.read()
+
         fin.close()
+
     except IOError:
         print('[Search Engine][Error] dict_as_str file isn\'t available!')
 
     try:
         path = f'{DICTIONARY_SAVING_PATH_NAME}'
         name = f'dict_info'
+
         fin = open(path + os.sep + name, 'rb')
+
         dict_info = fin.read()
+
         fin.close()
+
     except IOError:
         print('[Search Engine][Error] dict_info isn\'t available!')
 
@@ -256,11 +268,12 @@ def load_posting_list(term: str):
     posting_list = None
     try:
         path = f'{POSTING_LIST_SAVING_PATH_NAME}' + os.sep + f'{term[0]}_{POSTING_LIST_SAVING_PATH_NAME}'
-        print(path)
         name = f'{term}_posting_list'
-        print(name)
+
         fin = open(path + os.sep + name, 'rb')
+
         posting_list = fin.read()
+
         fin.close()
     except IOError:
         print(f'[Search Engine][Error] {term} file isn\'t available!')
@@ -296,21 +309,23 @@ def preprocess(file_name: str, num: int):
             else:
                 term_dict[k] = v
     # print(term_dict)
-    save_dict_posting_lists(term_dict, merging=merging)
-    #
-    # # print(term_dict)
+
     items_list = list(term_dict.keys())
     merge_sort(items_list)
     print(term_dict[items_list[1]])
-    print(items_list)
+
     print(items_list[1])
-    # freq_list = []
-    # pointer_list = []
-    #
-    # for t in items_list:
-    #     freq_list.append(len(term_dict[t]))
-    #     pointer_list.append(POINTER_POSTING_LIST_LENGTH)
-    # save_list_dictionary(items_list, freq_list, pointer_list)
+    freq_list = []
+    pointer_list = []
+
+    for t in items_list:
+        freq_list.append(len(term_dict[t]))
+        pointer_list.append(POINTER_POSTING_LIST_LENGTH)
+        term_dict[t] = list(set(term_dict[t]))
+
+    save_dict_posting_lists(term_dict)
+
+    save_list_dictionary(items_list, freq_list, pointer_list)
 
     print(f'Pre-processing is done')
 
