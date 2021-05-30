@@ -11,18 +11,27 @@ def get_command():
     se = SearchEngine()
     # print(se.show())
 
+    logs = {
+        1: 'It was successful',
+        -1: 'There isn\'t available any results!',
+        0: 'There is no query'
+    }
+
     while True:
 
         commands = input('>> ')
-        print(co.findall(commands))
         terms = list(map(lambda tp: tp[1], co.findall(commands)))
         if len(terms) > 0:
-            res = se.search(terms)
-            print(res)
+            res, log = se.search(terms)
+            if log == 1:
+                print(res)
+            print(logs[log])
 
-        for i in co.finditer(commands):
-            print(i.group(2))
-        print(co.findall(commands))
+            # Todo show content
+
+        # for i in co.finditer(commands):
+        #     print(i.group(2))
+        # print(co.findall(commands))
 
         if ('-exit', '') in co.findall(commands):
             break
