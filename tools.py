@@ -1,5 +1,3 @@
-from random import shuffle
-import time
 
 
 def binary_search(e, list_of_e: list):
@@ -9,7 +7,6 @@ def binary_search(e, list_of_e: list):
     while True:
         if head < rear:
             return None
-        print(rear, head)
 
         centre = int((head + rear)/2)
 
@@ -163,25 +160,25 @@ def intersection(doc_ids_lists: list, similarity_count=None):
     for doc_lst in doc_ids_lists:
         if len(doc_lst) > 0:
             comparison.append(doc_lst.pop(0))
-    print('start', comparison)
+    # print('start', comparison)
 
     while True:
         for i in set(comparison):
 
             if comparison.count(i) in similarity_count:
                 if i not in found_doc_id:
-                    print(comparison.count(i), i)
+                    # print(comparison.count(i), i)
                     found_doc_id.append(i)
 
-        print(f'min: {min(comparison)}')
+        # print(f'min: {min(comparison)}')
         index_of_min = comparison.index(min(comparison))
 
         if len(doc_ids_lists[index_of_min]) > 0:
             comparison[index_of_min] = doc_ids_lists[index_of_min].pop(0)
-            print(comparison[index_of_min], comparison)
+            # print(comparison[index_of_min], comparison)
         else:
-            print(comparison)
-            print('end')
+            # print(comparison)
+            # print('end')
             break
 
     return found_doc_id

@@ -3,7 +3,6 @@ from posting_list_compression import decompress_posting_list
 from indexing import load_posting_list, load_dictionary_bytes
 from tools import intersection, binary_search
 
-
 class SearchEngine:
 
     def __init__(self):
@@ -54,4 +53,9 @@ class SearchEngine:
 
 
 if __name__ == '__main__':
-    pass
+    se = SearchEngine()
+
+    print(
+        list(filter(lambda x: f'تر' in x, se.show()))
+    )
+

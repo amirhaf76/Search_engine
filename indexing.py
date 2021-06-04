@@ -1,7 +1,8 @@
 import re
 import pandas as pd
-from tools import merge_lists, merge_sort
 import os
+
+from tools import merge_lists, merge_sort
 from posting_list_compression import compress_posting_list, decompress_posting_list
 from dictionary_compression import compress_dictionary, POINTER_POSTING_LIST_LENGTH
 
