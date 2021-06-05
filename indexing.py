@@ -9,6 +9,9 @@ from dictionary_compression import compress_dictionary, POINTER_POSTING_LIST_LEN
 POSTING_LIST_SAVING_PATH_NAME = 'posting_lists'
 DICTIONARY_SAVING_PATH_NAME = 'dict_list'
 
+DICTIONARY_AS_STR_NAME = 'dict_as_str'
+DICTIONARY_INFO_NAME = 'dict_info'
+
 
 def posting_list_name_file(term: str):
     return f'{term}_posting_list'
@@ -166,49 +169,12 @@ def save_dict_posting_lists(dict_of_token: dict):
                 out_put.write(compress_posting_list(token))
 
 
-# deprecated
-def save_list_posting_lists(terms_ids: list, merging=True):
-    """
-    terms_ids should be sorted.
-    :param terms_ids:
-    :param merging:
-    :return:
-    """
-    os.makedirs(POSTING_LIST_SAVING_PATH_NAME, exist_ok=True)
-
-    for c in per_alphabet():
-        os.makedirs(f'{POSTING_LIST_SAVING_PATH_NAME}\\{c}_{POSTING_LIST_SAVING_PATH_NAME}', exist_ok=True)
-
-    while not len(terms_ids) == 0:
-        term, token = terms_ids.pop(0)
-
-        path = f'{POSTING_LIST_SAVING_PATH_NAME}' + os.sep + f'{term[0]}_{POSTING_LIST_SAVING_PATH_NAME}'
-        name = f'{term}_posting_list.poLi'
-
-        if name in os.listdir(path):
-            mode = 'r'
-        else:
-            mode = 'w'
-
-        with open(path + os.sep + name, f'{mode}b+') as out_put:
-
-            if merging:
-                li = decompress_posting_list(bytearray(out_put.read()))
-                out_put.seek(0, 0)
-                merge_lists(li, token.get_doc_ids())
-                out_put.write(compress_posting_list(token))
-
-            else:
-                out_put.seek(0, 2)
-                out_put.write(compress_posting_list(token))
-
-
 def save_list_dictionary(term_list: list, freq_list: list, pointer_list: list):
     os.makedirs(DICTIONARY_SAVING_PATH_NAME, exist_ok=True)
     dict_as_str, dict_info = compress_dictionary(term_list, freq_list, pointer_list)
 
     path = f'{DICTIONARY_SAVING_PATH_NAME}'
-    name = f'dict_as_str'
+    name = DICTIONARY_AS_STR_NAME
     if name in os.listdir(path):
         mode = 'r'
     else:
@@ -218,7 +184,7 @@ def save_list_dictionary(term_list: list, freq_list: list, pointer_list: list):
         out_put.write(dict_as_str)
 
     path = f'{DICTIONARY_SAVING_PATH_NAME}'
-    name = f'dict_info'
+    name = DICTIONARY_INFO_NAME
     if name in os.listdir(path):
         mode = 'r'
     else:
@@ -238,7 +204,7 @@ def load_dictionary_bytes():
 
     try:
         path = f'{DICTIONARY_SAVING_PATH_NAME}'
-        name = f'dict_as_str'
+        name = DICTIONARY_AS_STR_NAME
 
         fin = open(path + os.sep + name, 'rb')
 
@@ -251,7 +217,7 @@ def load_dictionary_bytes():
 
     try:
         path = f'{DICTIONARY_SAVING_PATH_NAME}'
-        name = f'dict_info'
+        name = DICTIONARY_INFO_NAME
 
         fin = open(path + os.sep + name, 'rb')
 
@@ -269,7 +235,7 @@ def load_posting_list(term: str):
     posting_list = None
     try:
         path = f'{POSTING_LIST_SAVING_PATH_NAME}' + os.sep + f'{term[0]}_{POSTING_LIST_SAVING_PATH_NAME}'
-        name = f'{term}_posting_list'
+        name = posting_list_name_file(term)
 
         fin = open(path + os.sep + name, 'rb')
 
