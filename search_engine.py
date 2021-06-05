@@ -1,7 +1,15 @@
 from dictionary_compression import decompress_dictionary
 from posting_list_compression import decompress_posting_list
 from indexing import load_posting_list, load_dictionary_bytes
+from correctness_filter import filter_word
 from tools import intersection, binary_search
+
+SEARCH_ENGINE_LOG = {
+        1: 'It was successful',
+        -1: 'There isn\'t available any results!',
+        0: 'There is no query'
+}
+
 
 class SearchEngine:
 
@@ -13,10 +21,16 @@ class SearchEngine:
         self.__terms_list, self.__freq_list, self.__pointer_posting_list = temp_tuple
 
     def search(self, list_of_terms: list) -> (list, int):
+        """
+        result and log number
+        :param list_of_terms:
+        :return:
+        """
         if len(list_of_terms) == 0:
             return [], 0
 
         elif len(list_of_terms) == 1:
+
             index = binary_search(list_of_terms[0], self.__terms_list)
 
             if index is None:
