@@ -1,5 +1,4 @@
 import re
-from search_engine import SearchEngine
 from tools import merge_lists
 
 TYPES_SUFFIX = [
@@ -15,7 +14,8 @@ SUFFIX_1 = [
     '‌هایی',  # with half-space
     'ها',
     'های',
-    'هایی'
+    'هایی',
+
 ]
 
 SUFFIX_2 = [
@@ -36,6 +36,7 @@ SUFFIX_3 = [
 SUFFIX_4 = [
     # 'شان',
     'یان',
+    'مان',
     'ان',
 ]
 
@@ -58,40 +59,52 @@ def replace_letters(word: str):
         return None
 
 
-def suffix_detector_1(txt: str):
-    for c in SUFFIX_1:
-        root = txt[:-1 * len(c)]
-        if c in txt[-1 * len(c):]:
-            return root
+def suffix_detector_1(txt: str, ref_list: list):
+    for s in SUFFIX_1:
+        if s in txt[-1 * len(s):]:
+            root = txt[:-1 * len(s)]
+            if binary_search(root, ref_list):
+                return root
 
     return None
 
 
-def suffix_detector_2(txt: str):
+def suffix_detector_2(txt: str, ref_list: list):
     for c in SUFFIX_2:
-        root = txt[:-1 * len(c)]
         if c in txt[-1 * len(c):]:
-            return root
+            root = txt[:-1 * len(c)]
+            if len(root) > 2 and binary_search(root, ref_list):
+                return root
 
     return None
 
 
-def suffix_detector_3(txt: str):
+def suffix_detector_3(txt: str, ref_list: list):
     for c in SUFFIX_3:
-        root = txt[:-1 * len(c)]
         if c in txt[-1 * len(c):]:
-            return root
+            root = txt[:-1 * len(c)]
+            if len(root) > 2 and binary_search(root, ref_list):
+                return root
 
     return None
 
 
-def suffix_detector_4(txt: str):
+def suffix_detector_4(txt: str, ref_list: list):
     for c in SUFFIX_4:
-        root = txt[:-1 * len(c)]
         if c in txt[-1 * len(c):]:
-            return root
+            root = txt[:-1 * len(c)]
+            if len(root) > 3 and binary_search(root, ref_list):
+                return root
 
     return None
+
+
+SUFFIX_FUNCTIONS = [
+    suffix_detector_1,
+    suffix_detector_2,
+    suffix_detector_3,
+    suffix_detector_4,
+]
 
 
 def complex_words_detector(txt: str):
@@ -111,7 +124,7 @@ def read_file(file_name: str):
     return c.findall(words)
 
 
-def remove_words():
+def removable_words():
     return read_file('removable_words')
 
 
@@ -131,8 +144,13 @@ def common_special_plural_verbs():
     )
 
 
-def base_form_verb_detector(verb: str, roots: list):
+CBF_ROOTS = common_base_form_verbs()
+CIV_ROOTS = common_imp_verbs()
+CSP = common_special_plural_verbs()
+REMOVABLE_WORDS = removable_words()
 
+
+def base_form_verb_detector(verb: str, roots: list):
     if verb in roots:
         return verb
 
@@ -154,7 +172,6 @@ def base_form_verb_detector(verb: str, roots: list):
 
 
 def imperative_verb_detector(verb: str, roots: list):
-
     if verb in roots:
         return verb
 
@@ -178,162 +195,149 @@ def imperative_verb_detector(verb: str, roots: list):
     return None
 
 
-def verb_creator_1(base_form_verbs: list) -> (list, dict):
-    """
-    it needs base form verbs. -> verbs_list, verbs_dict
-    :param base_form_verbs:
-    :return:
-    """
-    verbs_list = []
-    verbs_dict = {}
-    for word in base_form_verbs:
-        for suffix in TYPES_SUFFIX[0] + TYPES_SUFFIX[1] + TYPES_SUFFIX[2]:
-            verbs_list.append(f'{word[:-1]}{suffix}')
-            verbs_dict[f'{word[:-1]}{suffix}'] = word
+def merge_keys(old: str, new: str, words_dict: dict):
 
-        verbs_list.append(word[:-1])
-        verbs_dict[word[:-1]] = word
+    if words_dict.__contains__(new):
+        words_dict[new] = merge_lists(words_dict[new], words_dict[old])
+    else:
+        words_dict[new] = words_dict[old]
 
-        prefix = ['می', 'می\u200c']
-        for suffix in TYPES_SUFFIX[1] + TYPES_SUFFIX[2]:
-            verbs_list.append(f'{prefix[0]}{word[:-1]}{suffix}')
-            verbs_list.append(f'{prefix[1]}{word[:-1]}{suffix}')
-            verbs_dict[f'{prefix[0]}{word[:-1]}{suffix}'] = suffix
-            verbs_dict[f'{prefix[1]}{word[:-1]}{suffix}'] = suffix
-
-        verbs_list.append(f'{prefix[0]}{word[:-1]}')
-        verbs_list.append(f'{prefix[1]}{word[:-1]}')
-        verbs_dict[f'{prefix[0]}{word[:-1]}'] = word
-        verbs_dict[f'{prefix[1]}{word[:-1]}'] = word
-
-    return verbs_list, verbs_dict
+    words_dict.pop(old, None)
 
 
-def verb_creator_2(imperative_verbs: list) -> (list, dict):
-    """
-    it needs imperative verbs. -> verbs_list ,verbs_dict
-    :param imperative_verbs:
-    :return:
-    """
-    verbs_list = []
-    verbs_dict = {}
-    for word in imperative_verbs:
-        prefix = ['می', 'می\u200c']
-        for suffix in TYPES_SUFFIX[1] + TYPES_SUFFIX[2] + TYPES_SUFFIX[3]:
-            verbs_list.append(f'{prefix[0]}{word[1:]}{suffix}')
-            verbs_list.append(f'{prefix[1]}{word[1:]}{suffix}')
-            verbs_dict[f'{prefix[0]}{word[1:]}{suffix}'] = word
-            verbs_dict[f'{prefix[1]}{word[1:]}{suffix}'] = word
+def filter_verbs_in_dict(word: str, words_dict: dict):
 
-        # verbs_list.append(f'{word}')
+    # common_base_form_verbs
+    word_root = base_form_verb_detector(word, CBF_ROOTS)
+    if word_root is not None and not word == word_root:
+        merge_keys(word, word_root, words_dict)
+        return word_root
 
-    return verbs_list, verbs_dict
+    # common_imp_verbs
+    word_root = imperative_verb_detector(word, CIV_ROOTS)
+    if word_root is not None and not word == word_root:
+        merge_keys(word, word_root, words_dict)
+        return word_root
+
+    return None
 
 
-def filter_word(word):
-    cbf_roots = common_base_form_verbs()
-    civ_roots = common_imp_verbs()
-    csp = common_special_plural_verbs()
-    rw = remove_words()
+def filter_word_as_verb(word: str):
+    # common_base_form_verbs
+    word_root = base_form_verb_detector(word, CBF_ROOTS)
+    if word_root is not None and not word == word_root:
+        return word_root
 
-    new = replace_letters(word)
+    # common_imp_verbs
+    word_root = imperative_verb_detector(word, CIV_ROOTS)
+    if word_root is not None and not word == word_root:
+        return word_root
+
+    return None
+
+
+def filter_dict_from_suffix(word: str, words_dict: dict):
+    keys = words_dict.keys()
+
+    for suf_func in SUFFIX_FUNCTIONS:
+        root = suf_func(word, keys)
+        if root is not None:
+            merge_keys(word, root, words_dict)
+
+            return root
+
+    return None
+
+
+def filter_word_from_suffix(word: str, words_list: list):
+
+    for suf_func in SUFFIX_FUNCTIONS:
+        root = suf_func(word, words_list)
+        if root is not None:
+            return root
+
+    return None
+
+
+def filter_dict_from_special_plural_verbs(word: str, words_dict: dict):
+    if CSP.__contains__(word):
+        merge_keys(word, CSP[word], words_dict)
+        return CSP[word]
+
+    return None
+
+
+def filter_word_of_special_plural_verbs(word: str):
+    if CSP.__contains__(word):
+        return CSP[word]
+
+    return None
+
+
+def filter_word(key: str, words_list: list):
+    new = replace_letters(key)
     if new is not None:
-        word = new
+        key = new
 
-    if word in rw:
+    # removable word
+    if key in REMOVABLE_WORDS:
         return None
 
-    root = base_form_verb_detector(word, cbf_roots)
-    if root is not None:
-        return root
+    # common_special_plural_verbs
+    word_root = filter_word_of_special_plural_verbs(key)
+    if word_root is not None:
+        return word_root
 
-    root = imperative_verb_detector(word, civ_roots)
-    if root is not None:
-        return root
+    # filter suffix
+    word_root = filter_word_from_suffix(key, words_list)
+    if word_root is not None:
+        return word_root
 
-    return csp.get(word, None)
+    # filter verbs
+    filter_word_as_verb(key)
+    if word_root is not None:
+        return word_root
+
+    if new is not None:
+        return key
 
 
 def filter_dictionary(words_dict: dict):
-    cbf_roots = common_base_form_verbs()
-    civ_roots = common_imp_verbs()
-    csp = common_special_plural_verbs()
-    rw = remove_words()
 
     for key in words_dict.keys():
 
         new = replace_letters(key)
         if new is not None:
-            words_dict[new] = words_dict[key]
-            words_dict.pop(key, None)
+            merge_keys(key, new, words_dict)
             key = new
 
-        # removable keys
-        if key in rw:
-            words_dict.pop(key, None)
-            continue
-
-        # common_base_form_verbs
-        word_root = base_form_verb_detector(key, cbf_roots)
-        if word_root is not None:
-            if words_dict.__contains__(word_root):
-                words_dict[word_root] = merge_lists(words_dict[word_root], words_dict[key])
-            else:
-                words_dict[word_root] = words_dict[key]
-
-            words_dict.pop(key, None)
-            continue
-
-        # common_imp_verbs
-        word_root = imperative_verb_detector(key, civ_roots)
-        if word_root is not None:
-            if words_dict.__contains__(word_root):
-                words_dict[word_root] = merge_lists(words_dict[word_root], words_dict[key])
-            else:
-                words_dict[word_root] = words_dict[key]
-
+        # removable word
+        if key in REMOVABLE_WORDS:
             words_dict.pop(key, None)
             continue
 
         # common_special_plural_verbs
-        if csp.__contains__(key):
-            if words_dict.__contains__(csp[key]):
-                words_dict[csp[key]] = merge_lists(words_dict[csp[key]], words_dict[key])
-            else:
-                words_dict[csp[key]] = words_dict[key]
-            words_dict.pop(key, None)
+        if filter_dict_from_special_plural_verbs(key, words_dict) is not None:
             continue
+
+        # filter suffix
+        if filter_dict_from_suffix(key, words_dict) is not None:
+            continue
+
+        # filter verbs
+        filter_verbs_in_dict(key, words_dict)
 
 
 if __name__ == '__main__':
+    from search_engine import SearchEngine
+    from tools import binary_search
+
     # se = SearchEngine()
-    # # print(se.show())
     # li = se.show()
-    #
-    # # print(common_base_form_verbs())
-    # # print(common_imp_verbs())
-    # # print(common_special_plural_verbs())
-    # # print(remove_words())
-    # print(verb_creator_1(common_base_form_verbs()))
-    # print(verb_creator_2(common_imp_verbs()))
-    # root = ['بکن']
+    # for i in li:
+    #     t = filter_word(i, li)
+    #     print(i, t)
 
-    li_t2 = ['میکنیم', 'میکنید', 'میکنند', 'میکنم', 'میکنی', 'میکند']
 
-    li_t = [
-        'رفته\u200cام',
-        'رفته\u200cای',
-        'رفته',
-        'رفته\u200cایم',
-        'رفته\u200cاید',
-        'رفته\u200cاند',
-        'رفتیم',
-        'رفتید',
-        'رفتند',
-        'رفتم',
-        'رفتی',
-        'رفت'
-    ]
-    # print(imperative_verb_detector('میخورید', root))
-    for i in li_t2:
-        pass
+
+
