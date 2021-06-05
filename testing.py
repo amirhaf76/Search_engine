@@ -1,7 +1,10 @@
 from unittest import TestCase
-import posting_list_compression as plc
 from dictionary_compression import compress_dictionary, decompress_dictionary
+from search_engine import SearchEngine
+
 import dictionary_compression as dc
+import posting_list_compression as plc
+import correctness_filter as cf
 
 
 class TestPostingListCompression(TestCase):
@@ -102,6 +105,92 @@ class TestDictionaryCompression(TestCase):
         self.assertListEqual(posting_list, self.__posting_list)
 
         print('decompress_dictionary is successful.')
+
+
+class TestCorrectnessFilter(TestCase):
+    se = SearchEngine()
+    list_of_word = se.show()
+    dict_words = {
+        'اسپانسرها': [1, 23, 45],
+        'بزرگتر': [1, 45, 48],
+        'بزرگ': [2, 47, 100],
+        'ارزشمند': [23, 43, 64],
+        'ارزش': [1, 54],
+        'رفتید': [3, 7, 990,3434],
+        'رفته‌ام': [1,5,65,7777]
+    }
+
+    def test_replace_letters(self):
+
+        self.assertEqual(
+            'اب',
+            cf.replace_letters('آب'),
+        )
+
+        self.assertEqual(
+            'ابی',
+            cf.replace_letters('آبي')
+        )
+
+    def test_filter_dict_from_suffix(self):
+        v = list(self.dict_words.keys())
+        for word in v:
+            cf.filter_dict_from_suffix(word, self.dict_words)
+        print(self.dict_words)
+
+    def test_filter_verbs_in_dict(self):
+        v = list(self.dict_words.keys())
+        for word in v:
+            cf.filter_verbs_in_dict(word, self.dict_words)
+        print(self.dict_words)
+
+    def test_filter_dictionary(self):
+        cf.filter_dictionary(self.dict_words)
+        print(self.dict_words)
+
+    def test_suffix_detector_1(self):
+
+        for word in self.list_of_word:
+            res = cf.suffix_detector_1(word, self.list_of_word)
+            if res is not None:
+                print(word, res)
+
+    def test_suffix_detector_2(self):
+
+        for word in self.list_of_word:
+            res = cf.suffix_detector_2(word, self.list_of_word)
+            if res is not None:
+                print(word, res)
+
+    def test_suffix_detector_3(self):
+
+        for word in self.list_of_word:
+            res = cf.suffix_detector_3(word, self.list_of_word)
+            if res is not None:
+                print(word, res)
+
+    def test_suffix_detector_4(self):
+
+        for word in self.list_of_word:
+            res = cf.suffix_detector_4(word, self.list_of_word)
+            if res is not None:
+                print(word, res)
+
+    def test_filter_word_of_special_plural_verbs(self):
+
+        for word in self.list_of_word:
+            res = cf.filter_word_of_special_plural_verbs(word)
+            if res is not None:
+                print(word, res)
+
+    def test_filter_word_as_verb(self):
+
+        for word in self.list_of_word:
+            res = cf.filter_word_as_verb(word)
+            if res is not None:
+                print(word, res)
+
+
 
 
 if __name__ == '__main__':
