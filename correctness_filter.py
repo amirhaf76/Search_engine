@@ -39,6 +39,23 @@ SUFFIX_4 = [
     'ان',
 ]
 
+REPLACEMENT_LETTER = {
+    'آ': 'ا',
+    'ي': 'ی'
+}
+
+
+def replace_letters(word: str):
+    new_word = False
+    for letter in REPLACEMENT_LETTER.keys():
+        if not word.count(letter) == 0:
+            word.replace(letter, REPLACEMENT_LETTER[letter])
+            new_word = True
+
+    if new_word:
+        return word
+    else:
+        return None
 
 
 def suffix_detector_1(txt: str):
@@ -219,12 +236,22 @@ def filter_word(word):
     csp = common_special_plural_verbs()
     rw = remove_words()
 
-
+    new = replace_letters(word)
+    if new is not None:
+        word = new
 
     if word in rw:
         return None
 
+    root = base_form_verb_detector(word, cbf_roots)
+    if root is not None:
+        return root
 
+    root = imperative_verb_detector(word, civ_roots)
+    if root is not None:
+        return root
+
+    return csp.get(word, None)
 
 
 def filter_dictionary(words_dict: dict):
@@ -234,9 +261,12 @@ def filter_dictionary(words_dict: dict):
     rw = remove_words()
 
     for key in words_dict.keys():
-        if not key.count('آ') == 0:
-            words_dict[key.replace('آ', 'ا')] = words_dict[key]
+
+        new = replace_letters(key)
+        if new is not None:
+            words_dict[new] = words_dict[key]
             words_dict.pop(key, None)
+            key = new
 
         # removable keys
         if key in rw:
@@ -286,7 +316,7 @@ if __name__ == '__main__':
     # # print(remove_words())
     # print(verb_creator_1(common_base_form_verbs()))
     # print(verb_creator_2(common_imp_verbs()))
-    root = ['بکن']
+    # root = ['بکن']
 
     li_t2 = ['میکنیم', 'میکنید', 'میکنند', 'میکنم', 'میکنی', 'میکند']
 
@@ -304,6 +334,6 @@ if __name__ == '__main__':
         'رفتی',
         'رفت'
     ]
-    print(imperative_verb_detector('میخورید', root))
+    # print(imperative_verb_detector('میخورید', root))
     for i in li_t2:
         pass
