@@ -1,5 +1,5 @@
 import re
-from tools import merge_lists
+from tools import merge_lists, binary_search
 
 TYPES_SUFFIX = [
     ['ه‌ام', 'ه‌ای', 'ه', 'ه‌ایم', 'ه‌اید', 'ه‌اند'],
@@ -30,14 +30,13 @@ SUFFIX_3 = [
     'گین',
     'اسا',
     'مند',
-    # 'شان'
 ]
 
 SUFFIX_4 = [
-    # 'شان',
+    'شان',
     'یان',
     'مان',
-    'ان',
+    'ان'
 ]
 
 REPLACEMENT_LETTER = {
@@ -50,7 +49,7 @@ def replace_letters(word: str):
     new_word = False
     for letter in REPLACEMENT_LETTER.keys():
         if not word.count(letter) == 0:
-            word.replace(letter, REPLACEMENT_LETTER[letter])
+            word = word.replace(letter, REPLACEMENT_LETTER[letter])
             new_word = True
 
     if new_word:
@@ -63,7 +62,8 @@ def suffix_detector_1(txt: str, ref_list: list):
     for s in SUFFIX_1:
         if s in txt[-1 * len(s):]:
             root = txt[:-1 * len(s)]
-            if binary_search(root, ref_list):
+            search_res = binary_search(root, ref_list)
+            if search_res is not None:
                 return root
 
     return None
@@ -73,7 +73,8 @@ def suffix_detector_2(txt: str, ref_list: list):
     for c in SUFFIX_2:
         if c in txt[-1 * len(c):]:
             root = txt[:-1 * len(c)]
-            if len(root) > 2 and binary_search(root, ref_list):
+            search_res = binary_search(root, ref_list)
+            if len(root) > 2 and search_res is not None:
                 return root
 
     return None
@@ -83,7 +84,8 @@ def suffix_detector_3(txt: str, ref_list: list):
     for c in SUFFIX_3:
         if c in txt[-1 * len(c):]:
             root = txt[:-1 * len(c)]
-            if len(root) > 2 and binary_search(root, ref_list):
+            search_res = binary_search(root, ref_list)
+            if len(root) > 2 and search_res is not None:
                 return root
 
     return None
@@ -93,7 +95,8 @@ def suffix_detector_4(txt: str, ref_list: list):
     for c in SUFFIX_4:
         if c in txt[-1 * len(c):]:
             root = txt[:-1 * len(c)]
-            if len(root) > 3 and binary_search(root, ref_list):
+            search_res = binary_search(root, ref_list)
+            if len(root) > 3 and search_res is not None:
                 return root
 
     return None
@@ -151,6 +154,9 @@ REMOVABLE_WORDS = removable_words()
 
 
 def base_form_verb_detector(verb: str, roots: list):
+    if len(verb) < 3:
+        return None
+
     if verb in roots:
         return verb
 
@@ -172,6 +178,9 @@ def base_form_verb_detector(verb: str, roots: list):
 
 
 def imperative_verb_detector(verb: str, roots: list):
+    if len(verb) < 3:
+        return None
+
     if verb in roots:
         return verb
 
@@ -237,7 +246,8 @@ def filter_word_as_verb(word: str):
 
 
 def filter_dict_from_suffix(word: str, words_dict: dict):
-    keys = words_dict.keys()
+    keys = list(words_dict.keys())
+    keys.sort()
 
     for suf_func in SUFFIX_FUNCTIONS:
         root = suf_func(word, keys)
@@ -303,8 +313,9 @@ def filter_word(key: str, words_list: list):
 
 
 def filter_dictionary(words_dict: dict):
+    keys = list(words_dict.keys())
 
-    for key in words_dict.keys():
+    for key in keys:
 
         new = replace_letters(key)
         if new is not None:
@@ -330,13 +341,13 @@ def filter_dictionary(words_dict: dict):
 
 if __name__ == '__main__':
     from search_engine import SearchEngine
-    from tools import binary_search
 
-    # se = SearchEngine()
-    # li = se.show()
-    # for i in li:
-    #     t = filter_word(i, li)
-    #     print(i, t)
+    se = SearchEngine()
+    li = se.show()
+    for i in li:
+        t = filter_word(i, li)
+        print(i, t)
+    # filter_word('آید', li)
 
 
 
