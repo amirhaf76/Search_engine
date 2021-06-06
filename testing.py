@@ -107,9 +107,20 @@ class TestDictionaryCompression(TestCase):
         print('decompress_dictionary is successful.')
 
 
+class TestSearchEngine(TestCase):
+    se = SearchEngine()
+    list_of_word = se.show()
+
+    def test_search(self):
+        print(self.se.search(['جوانان']))
+        print(self.se.search(['جوان']))
+        print(self.se.search(['جوانان', 'آب']))
+
+
 class TestCorrectnessFilter(TestCase):
     se = SearchEngine()
     list_of_word = se.show()
+
     dict_words = {
         'اسپانسرها': [1, 23, 45],
         'بزرگتر': [1, 45, 48],

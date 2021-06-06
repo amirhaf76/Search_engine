@@ -4,7 +4,8 @@ import os
 
 from tools import merge_lists, merge_sort
 from posting_list_compression import compress_posting_list, decompress_posting_list
-from dictionary_compression import compress_dictionary, POINTER_POSTING_LIST_LENGTH
+from dictionary_compression import compress_dictionary, decompress_dictionary, POINTER_POSTING_LIST_LENGTH
+from correctness_filter import filter_dictionary
 
 POSTING_LIST_SAVING_PATH_NAME = 'posting_lists'
 DICTIONARY_SAVING_PATH_NAME = 'dict_list'
@@ -82,7 +83,6 @@ def make_compiler():
     return re.compile(per_regex())
 
 
-# deprecated
 def parser_dict(df: pd.DataFrame, col: str, doc_id: str, comp, num=-1) -> dict:
 
     if not df.__contains__(col):
@@ -101,40 +101,10 @@ def parser_dict(df: pd.DataFrame, col: str, doc_id: str, comp, num=-1) -> dict:
             if not buff_dict.__contains__(t):
                 buff_dict[t] = [int(df[doc_id].iloc[i])]
             else:
-                buff_dict[t].append(int(df[doc_id].iloc[i]))
+                if not buff_dict[t].__contains__(int(df[doc_id].iloc[i])):
+                    buff_dict[t].append(int(df[doc_id].iloc[i]))
 
     return buff_dict
-
-
-def parser_list(df: pd.DataFrame, col: str, doc_id: str, comp, num=-1) -> list:
-    """
-    return list of tuple(term, id)
-    :param df:
-    :param col:
-    :param doc_id:
-    :param comp:
-    :param num:
-    :return:
-    """
-
-    if not df.__contains__(col):
-        raise Exception(f'df doesn\'t have column {col}')
-    elif not df.__contains__(doc_id):
-        raise Exception(f'df doesn\'t have column {doc_id}')
-
-    list_of_term_id = list()
-
-    if num == -1:
-        num = len(df)
-
-    for i in range(num):
-        tokens = comp.findall(df[col].iloc[i])
-        for t in tokens:
-            list_of_term_id.append(
-                (t, int(df[doc_id].iloc[i]))
-            )
-
-    return list_of_term_id
 
 
 def save_dict_posting_lists(dict_of_token: dict):
@@ -157,13 +127,10 @@ def save_dict_posting_lists(dict_of_token: dict):
             if name in os.listdir(path):
 
                 li = decompress_posting_list(bytearray(out_put.read()))
-                out_put.seek(0, 0)
+                out_put.truncate()
                 new_list = merge_lists(li, token)
+
                 out_put.write(compress_posting_list(new_list))
-                if term == 'آب':
-                    print(li)
-                    print(token)
-                    print(new_list)
 
             else:
                 out_put.write(compress_posting_list(token))
@@ -175,6 +142,7 @@ def save_list_dictionary(term_list: list, freq_list: list, pointer_list: list):
 
     path = f'{DICTIONARY_SAVING_PATH_NAME}'
     name = DICTIONARY_AS_STR_NAME
+
     if name in os.listdir(path):
         mode = 'r'
     else:
@@ -248,11 +216,6 @@ def load_posting_list(term: str):
     return bytearray(posting_list)
 
 
-# Todo filtering terms
-def filter_terms(lis_of_terms: dict) -> None:
-    pass
-
-
 def preprocess(file_name: str, num: int):
     file_in = pd.read_csv(file_name)
 
@@ -264,31 +227,29 @@ def preprocess(file_name: str, num: int):
 
         terms_ids = parser_dict(file_in[read_file: read_file + 100], 'content', 'id', re.compile(per_regex()), 100)
         read_file += 100
-        # print(terms_ids)
-        filter_terms(terms_ids)
+
+        filter_dictionary(terms_ids)
 
         if not read_file == 100:
             merging = True
 
         for k, v in terms_ids.items():
             if term_dict.__contains__(k):
+
                 term_dict = merge_lists(term_dict[k], v, repetition=False)
+
             else:
                 term_dict[k] = v
-    # print(term_dict)
 
     items_list = list(term_dict.keys())
     merge_sort(items_list)
-    print(term_dict[items_list[1]])
 
-    print(items_list[1])
     freq_list = []
     pointer_list = []
 
     for t in items_list:
         freq_list.append(len(term_dict[t]))
         pointer_list.append(POINTER_POSTING_LIST_LENGTH)
-        term_dict[t] = list(set(term_dict[t]))
 
     save_dict_posting_lists(term_dict)
 

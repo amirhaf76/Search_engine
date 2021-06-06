@@ -1,40 +1,77 @@
 import re
-
+from pandas import DataFrame, read_csv
 from indexing import per_regex
-from search_engine import SearchEngine
+from search_engine import SearchEngine, SEARCH_ENGINE_LOG
+from time import time
+
+
+SOURCE_FILE_NAME = 'IR_Spring2021_ph12_7k.csv'
+
+
+def get_source(file_name: str) -> DataFrame:
+    return read_csv(file_name)
+
+
+def show_result(df: DataFrame, lis_of_id: list, brief=True):
+
+    # for doc__id in lis_of_id:
+    #     info = df[df['id'] == doc__id]
+    #     print(f'id: {info["id"].to_string(index=False )}')
+    #
+    #     print(f'content:\n{info["content"].to_string(index=False)}')
+    #
+    #     print(f'url: {info["url"].to_string(index=False)}')
+    #
+    #     print(40 * '_')
+
+    for doc__id in lis_of_id:
+        info = df.iloc[doc__id-1]
+        print(f'id: {info["id"]}')
+
+        if brief:
+            print(f'content:\n{df[df["id"]==doc__id]["content"].to_string(index=False)}')
+        else:
+            print(f'content:\n{info["content"]}')
+
+        print(f'url: {info["url"]}')
+
+        print(40 * '_')
 
 
 def get_command():
-    # co = re.compile(r'(?:(-\w+\s*\w+)|(\w+))')
-    # co1 = re.compile(r'(?:-\w+|\w+)')
     co = re.compile(f'(-[a-zA-Z_]+)|({per_regex()})')
 
     se = SearchEngine()
-    # print(se.show())
-
-    logs = {
-        1: 'It was successful',
-        -1: 'There isn\'t available any results!',
-        0: 'There is no query'
-    }
+    src = get_source(SOURCE_FILE_NAME)
 
     while True:
 
-        commands = input('>> ')
-        terms = list(map(lambda tp: tp[1], co.findall(commands)))
+        inputs = input('>> ')
+        cmd_parts = co.findall(inputs)
+        # terms = list(map(lambda tp: tp[1], cmd_parts))
+        terms = []
+        commands = []
+        for cmd, term in cmd_parts:
+            if not term == '':
+                terms.append(term)
+            elif not cmd == '':
+                commands.append(cmd)
+
         if len(terms) > 0:
+
+            start_time = time()
             res, log = se.search(terms)
+            end_time = time()
+
             if log == 1:
-                print(res)
-            print(logs[log])
+                if '-full' in commands:
+                    show_result(src, res, brief=False)
+                else:
+                    show_result(src, res)
 
-            # Todo show content
+            print(f'{SEARCH_ENGINE_LOG[log]}\nruntime: {end_time - start_time:.10f}')
 
-        # for i in co.finditer(commands):
-        #     print(i.group(2))
-        # print(co.findall(commands))
-
-        if ('-exit', '') in co.findall(commands):
+        if '-exit' in commands:
             break
 
 

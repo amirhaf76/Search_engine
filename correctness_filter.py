@@ -285,6 +285,7 @@ def filter_word_of_special_plural_verbs(word: str):
 
 
 def filter_word(key: str, words_list: list):
+    print(key)
     new = replace_letters(key)
     if new is not None:
         key = new
@@ -308,8 +309,7 @@ def filter_word(key: str, words_list: list):
     if word_root is not None:
         return word_root
 
-    if new is not None:
-        return key
+    return key
 
 
 def filter_dictionary(words_dict: dict):
