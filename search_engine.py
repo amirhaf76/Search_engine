@@ -86,9 +86,4 @@ class SearchEngine:
 
 
 if __name__ == '__main__':
-    se = SearchEngine()
-
-    # print(
-    #     list(filter(lambda x: f'تر' in x, se.show()))
-    # )
-
+    pass

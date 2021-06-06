@@ -14,16 +14,6 @@ def get_source(file_name: str) -> DataFrame:
 
 def show_result(df: DataFrame, lis_of_id: list, brief=True):
 
-    # for doc__id in lis_of_id:
-    #     info = df[df['id'] == doc__id]
-    #     print(f'id: {info["id"].to_string(index=False )}')
-    #
-    #     print(f'content:\n{info["content"].to_string(index=False)}')
-    #
-    #     print(f'url: {info["url"].to_string(index=False)}')
-    #
-    #     print(40 * '_')
-
     for doc__id in lis_of_id:
         info = df.iloc[doc__id-1]
         print(f'id: {info["id"]}')
@@ -48,9 +38,10 @@ def get_command():
 
         inputs = input('>> ')
         cmd_parts = co.findall(inputs)
-        # terms = list(map(lambda tp: tp[1], cmd_parts))
+
         terms = []
         commands = []
+
         for cmd, term in cmd_parts:
             if not term == '':
                 terms.append(term)

@@ -1,5 +1,4 @@
 from math import log2, ceil
-from tools import merge_lists_of_tuple
 
 AVERAGE_WORD_LENGTH = 10
 FREQUENCY_LENGTH = 4
@@ -121,41 +120,6 @@ def compress_dictionary(items: list, frequency: list, posting_list: list, k: int
             current_pointer += 1
 
     return dict_as_str, bytearray(dict_info)
-
-
-def merge_dictionaries(
-        dict_as_str_1: bytearray,
-        dict_as_str_2: bytearray,
-        dict_info_1: bytearray,
-        dict_info_2: bytearray
-):
-
-    data_duple_1 = decompress_dictionary(dict_as_str_1, dict_info_1)
-    data_duple_2 = decompress_dictionary(dict_as_str_2, dict_info_2)
-
-    dict_list_1 = list(
-        zip(
-            data_duple_1[0],
-            data_duple_1[1],
-            data_duple_1[2],
-        )
-    )
-
-    dict_list_2 = list(
-        zip(
-            data_duple_2[0],
-            data_duple_2[1],
-            data_duple_2[2],
-        )
-    )
-
-    new_dict_list = merge_lists_of_tuple(dict_list_1, dict_list_2)
-
-    items = list(map(lambda x: x[0], new_dict_list))
-    frequency = list(map(lambda x: x[1], new_dict_list))
-    posting_list = list(map(lambda x: x[2], new_dict_list))
-
-    return compress_dictionary(items, frequency, posting_list)
 
 
 if __name__ == '__main__':
