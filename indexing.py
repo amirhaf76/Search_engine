@@ -96,13 +96,16 @@ def parser_dict(df: pd.DataFrame, col: str, doc_id: str, comp, num=-1) -> dict:
         num = len(df)
 
     for i in range(num):
-        temp = comp.findall(df[col].iloc[i])
-        for t in temp:
-            if not buff_dict.__contains__(t):
-                buff_dict[t] = [int(df[doc_id].iloc[i])]
-            else:
-                if not buff_dict[t].__contains__(int(df[doc_id].iloc[i])):
-                    buff_dict[t].append(int(df[doc_id].iloc[i]))
+        try:
+            temp = comp.findall(df[col].iloc[i])
+            for t in temp:
+                if not buff_dict.__contains__(t):
+                    buff_dict[t] = [int(df[doc_id].iloc[i])]
+                else:
+                    if not buff_dict[t].__contains__(int(df[doc_id].iloc[i])):
+                        buff_dict[t].append(int(df[doc_id].iloc[i]))
+        except TypeError:
+            print(f'type error in source {i} - index.')
 
     return buff_dict
 
@@ -118,21 +121,14 @@ def save_dict_posting_lists(dict_of_token: dict):
         name = posting_list_name_file(term)
 
         if name in os.listdir(path):
-            mode = 'r'
-        else:
-            mode = 'w'
-
-        with open(path + os.sep + name, f'{mode}b+') as out_put:
-
-            if name in os.listdir(path):
-
+            with open(path + os.sep + name, f'rb') as out_put:
                 li = decompress_posting_list(bytearray(out_put.read()))
-                out_put.truncate()
                 new_list = merge_lists(li, token)
 
+            with open(path + os.sep + name, f'wb') as out_put:
                 out_put.write(compress_posting_list(new_list))
-
-            else:
+        else:
+            with open(path + os.sep + name, f'wb') as out_put:
                 out_put.write(compress_posting_list(token))
 
 
@@ -143,22 +139,13 @@ def save_list_dictionary(term_list: list, freq_list: list, pointer_list: list):
     path = f'{DICTIONARY_SAVING_PATH_NAME}'
     name = DICTIONARY_AS_STR_NAME
 
-    if name in os.listdir(path):
-        mode = 'r'
-    else:
-        mode = 'w'
-
-    with open(path + os.sep + name, f'{mode}b+') as out_put:
+    with open(path + os.sep + name, f'wb+') as out_put:
         out_put.write(dict_as_str)
 
     path = f'{DICTIONARY_SAVING_PATH_NAME}'
     name = DICTIONARY_INFO_NAME
-    if name in os.listdir(path):
-        mode = 'r'
-    else:
-        mode = 'w'
 
-    with open(path + os.sep + name, f'{mode}b+') as out_put:
+    with open(path + os.sep + name, f'wb+') as out_put:
         out_put.write(dict_info)
 
 
@@ -220,7 +207,6 @@ def preprocess(file_name: str, num: int):
     file_in = pd.read_csv(file_name)
 
     read_file = 0
-    merging = False
     term_dict = {}
 
     while read_file < num:
@@ -228,18 +214,16 @@ def preprocess(file_name: str, num: int):
         terms_ids = parser_dict(file_in[read_file: read_file + 100], 'content', 'id', re.compile(per_regex()), 100)
         read_file += 100
 
-        filter_dictionary(terms_ids)
-
-        if not read_file == 100:
-            merging = True
-
         for k, v in terms_ids.items():
             if term_dict.__contains__(k):
-
-                term_dict = merge_lists(term_dict[k], v, repetition=False)
-
+                term_dict[k] = merge_lists(term_dict[k], v, repetition=False)
             else:
                 term_dict[k] = v
+
+        print(f'{read_file}/{num} was tokenized.')
+
+    filter_dictionary(term_dict)
+    print(f'Dictionary was filtered successfully.')
 
     items_list = list(term_dict.keys())
     merge_sort(items_list)
@@ -252,11 +236,14 @@ def preprocess(file_name: str, num: int):
         pointer_list.append(POINTER_POSTING_LIST_LENGTH)
 
     save_dict_posting_lists(term_dict)
+    print(f'Posting lists were saved successfully.')
 
     save_list_dictionary(items_list, freq_list, pointer_list)
+    print(f'Dictionary were saved successfully.')
 
     print(f'Pre-processing is done')
 
 
 if __name__ == '__main__':
-    preprocess('IR_Spring2021_ph12_7k.csv', 100)
+    # for i in range(100, 200+1, 100):
+    preprocess('IR_Spring2021_ph12_7k.csv', 1000)

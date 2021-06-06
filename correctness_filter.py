@@ -206,8 +206,12 @@ def imperative_verb_detector(verb: str, roots: list):
 
 def merge_keys(old: str, new: str, words_dict: dict):
 
-    if words_dict.__contains__(new):
+    if words_dict.__contains__(new) and words_dict.__contains__(old):
         words_dict[new] = merge_lists(words_dict[new], words_dict[old])
+    elif not words_dict.__contains__(new) and not words_dict.__contains__(old):
+        pass
+    elif words_dict.__contains__(new) and not words_dict.__contains__(old):
+        pass
     else:
         words_dict[new] = words_dict[old]
 
@@ -285,7 +289,6 @@ def filter_word_of_special_plural_verbs(word: str):
 
 
 def filter_word(key: str, words_list: list):
-    print(key)
     new = replace_letters(key)
     if new is not None:
         key = new

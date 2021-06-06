@@ -1,6 +1,7 @@
 from unittest import TestCase
 from dictionary_compression import compress_dictionary, decompress_dictionary
 from search_engine import SearchEngine
+from tools import *
 
 import dictionary_compression as dc
 import posting_list_compression as plc
@@ -112,9 +113,10 @@ class TestSearchEngine(TestCase):
     list_of_word = se.show()
 
     def test_search(self):
-        print(self.se.search(['جوانان']))
+        print(self.se.search(['اب']))
         print(self.se.search(['جوان']))
-        print(self.se.search(['جوانان', 'آب']))
+        print(self.se.search(['جوان']))
+        print(self.se.search(['شنا', 'آب']))
 
 
 class TestCorrectnessFilter(TestCase):
@@ -202,6 +204,12 @@ class TestCorrectnessFilter(TestCase):
                 print(word, res)
 
 
+class TestTools(TestCase):
+
+    def test_merge_lists(self):
+        temp = list(range(0, 10))
+        temp1 = list(range(0, 10))
+        print(merge_lists(temp, temp1))
 
 
 if __name__ == '__main__':
