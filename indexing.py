@@ -4,7 +4,7 @@ import os
 
 from tools import merge_lists, merge_sort
 from posting_list_compression import compress_posting_list, decompress_posting_list
-from dictionary_compression import compress_dictionary, decompress_dictionary, POINTER_POSTING_LIST_LENGTH
+from dictionary_compression import compress_dictionary, POINTER_POSTING_LIST_LENGTH
 from correctness_filter import filter_dictionary
 
 POSTING_LIST_SAVING_PATH_NAME = 'posting_lists'
@@ -18,69 +18,12 @@ def posting_list_name_file(term: str):
     return f'{term}_posting_list'
 
 
-class Token:
-
-    def __init__(self, doc_id: int, term: str):
-        self.__doc_ids = [doc_id]
-        self.__term = term
-
-    def add_doc_id(self, new_doc_id):
-        self.__doc_ids.append(new_doc_id)
-
-    def get_term(self):
-        return self.__term
-
-    def get_doc_ids(self):
-        return self.__doc_ids.copy()
-
-    def get_frequency(self):
-        return len(self.__doc_ids)
-
-    def get_frequency_of(self, doc_id: int):
-        return self.__doc_ids.count(doc_id)
-
-    def __str__(self):
-        return f'<term: {self.__term}, doc_ids: {self.__doc_ids}>'
-
-    def __repr__(self):
-        return f'<term: {self.__term}, doc_ids: {self.__doc_ids}>'
-
-    def __eq__(self, other):
-        return self.__term.__eq__(other)
-
-    def __le__(self, other):
-        return self.__term.__le__(other)
-
-    def __lt__(self, other):
-        return self.__term.__lt__(other)
-
-    def __ge__(self, other):
-        return self.__term.__ge__(other)
-
-    def __gt__(self, other):
-        return self.__term.__gt__(other)
-
-
-def make_index_file(c: str, data_: bytearray):
-
-    with open(f'{c}_inverse.char', 'ab') as out_put:
-        out_put.write(data_)
-
-
 def per_alphabet():
     return 'آأابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهیئ‌كءي'
 
 
 def per_regex():
     return f'[{per_alphabet()}]+'
-
-
-def per_num():
-    return '[۱۲۳۴۵۶۷۸۹۰]+'
-
-
-def make_compiler():
-    return re.compile(per_regex())
 
 
 def parser_dict(df: pd.DataFrame, col: str, doc_id: str, comp, num=-1) -> dict:
@@ -245,5 +188,4 @@ def preprocess(file_name: str, num: int):
 
 
 if __name__ == '__main__':
-    # for i in range(100, 200+1, 100):
     preprocess('IR_Spring2021_ph12_7k.csv', 1000)

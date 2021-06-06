@@ -11,11 +11,6 @@ import correctness_filter as cf
 class TestPostingListCompression(TestCase):
     __test_id = [2, 12, 27, 127, 1127, 4127]
 
-    # def test_all(self):
-    #     self.test_variable_byte()
-    #     self.test_compress_posting_list()
-    #     self.test_decompress_posting_list()
-
     def test_variable_byte(self):
         self.assertEqual(bytearray(b'\x82'), plc.variable_byte(2))
         self.assertEqual(bytearray(b'\x8f'), plc.variable_byte(15))
@@ -129,8 +124,8 @@ class TestCorrectnessFilter(TestCase):
         'بزرگ': [2, 47, 100],
         'ارزشمند': [23, 43, 64],
         'ارزش': [1, 54],
-        'رفتید': [3, 7, 990,3434],
-        'رفته‌ام': [1,5,65,7777]
+        'رفتید': [3, 7, 990, 3434],
+        'رفته‌ام': [1, 5, 65, 7777]
     }
 
     def test_replace_letters(self):
@@ -149,12 +144,6 @@ class TestCorrectnessFilter(TestCase):
         v = list(self.dict_words.keys())
         for word in v:
             cf.filter_dict_from_suffix(word, self.dict_words)
-        print(self.dict_words)
-
-    def test_filter_verbs_in_dict(self):
-        v = list(self.dict_words.keys())
-        for word in v:
-            cf.filter_verbs_in_dict(word, self.dict_words)
         print(self.dict_words)
 
     def test_filter_dictionary(self):

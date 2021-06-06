@@ -208,31 +208,11 @@ def merge_keys(old: str, new: str, words_dict: dict):
 
     if words_dict.__contains__(new) and words_dict.__contains__(old):
         words_dict[new] = merge_lists(words_dict[new], words_dict[old])
-    elif not words_dict.__contains__(new) and not words_dict.__contains__(old):
-        pass
-    elif words_dict.__contains__(new) and not words_dict.__contains__(old):
-        pass
+
     else:
         words_dict[new] = words_dict[old]
 
     words_dict.pop(old, None)
-
-
-def filter_verbs_in_dict(word: str, words_dict: dict):
-
-    # common_base_form_verbs
-    word_root = base_form_verb_detector(word, CBF_ROOTS)
-    if word_root is not None and not word == word_root:
-        merge_keys(word, word_root, words_dict)
-        return word_root
-
-    # common_imp_verbs
-    word_root = imperative_verb_detector(word, CIV_ROOTS)
-    if word_root is not None and not word == word_root:
-        merge_keys(word, word_root, words_dict)
-        return word_root
-
-    return None
 
 
 def filter_word_as_verb(word: str):
@@ -256,8 +236,6 @@ def filter_dict_from_suffix(word: str, words_dict: dict):
     for suf_func in SUFFIX_FUNCTIONS:
         root = suf_func(word, keys)
         if root is not None:
-            merge_keys(word, root, words_dict)
-
             return root
 
     return None
@@ -269,14 +247,6 @@ def filter_word_from_suffix(word: str, words_list: list):
         root = suf_func(word, words_list)
         if root is not None:
             return root
-
-    return None
-
-
-def filter_dict_from_special_plural_verbs(word: str, words_dict: dict):
-    if CSP.__contains__(word):
-        merge_keys(word, CSP[word], words_dict)
-        return CSP[word]
 
     return None
 
@@ -316,42 +286,46 @@ def filter_word(key: str, words_list: list):
 
 
 def filter_dictionary(words_dict: dict):
-    keys = list(words_dict.keys())
+    replaced_keys = list()
 
-    for key in keys:
-
+    for key in words_dict.keys():
+        old = key
         new = replace_letters(key)
         if new is not None:
-            merge_keys(key, new, words_dict)
             key = new
 
         # removable word
         if key in REMOVABLE_WORDS:
-            words_dict.pop(key, None)
+            replaced_keys.append((old, ''))
             continue
 
         # common_special_plural_verbs
-        if filter_dict_from_special_plural_verbs(key, words_dict) is not None:
+        new_word = filter_word_of_special_plural_verbs(key)
+        if new_word is not None:
+            replaced_keys.append((old, new_word))
             continue
 
         # filter suffix
-        if filter_dict_from_suffix(key, words_dict) is not None:
+        new_word = filter_dict_from_suffix(key, words_dict)
+        if new_word is not None:
+            replaced_keys.append((old, new_word))
             continue
 
         # filter verbs
-        filter_verbs_in_dict(key, words_dict)
+        new_word = filter_word_as_verb(key)
+        if new_word is not None:
+            replaced_keys.append((old, new_word))
+            continue
+
+        if not old == key:
+            replaced_keys.append((old, key))
+
+    for rk_old, rk_new in replaced_keys:
+        if not rk_new == '':
+            merge_keys(rk_old, rk_new, words_dict)
+        else:
+            words_dict.pop(rk_old, None)
 
 
 if __name__ == '__main__':
-    from search_engine import SearchEngine
-
-    se = SearchEngine()
-    li = se.show()
-    for i in li:
-        t = filter_word(i, li)
-        print(i, t)
-    # filter_word('آید', li)
-
-
-
-
+    pass
