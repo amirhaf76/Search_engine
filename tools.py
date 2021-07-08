@@ -77,6 +77,38 @@ def merge_lists(list_1: list, list_2: list, repetition=False):
     return temp
 
 
+def merge_tuple_lists(list_1: list, list_2: list, e: int = 0, repetition=False):
+    r_1 = 0
+    r_2 = 0
+    h_1 = len(list_1) - 1
+    h_2 = len(list_2) - 1
+    temp = []
+
+    while r_1 <= h_1 and r_2 <= h_2:
+
+        if list_1[r_1][e] < list_2[r_2][e]:
+            temp.append(list_1[r_1])
+            r_1 += 1
+        elif list_1[r_1][e] > list_2[r_2][e]:
+            temp.append(list_2[r_2])
+            r_2 += 1
+        else:
+            temp.append(list_1[r_1])
+            r_1 += 1
+            if not repetition:
+                r_2 += 1
+
+    while r_1 <= h_1:
+        temp.append(list_1[r_1])
+        r_1 += 1
+
+    while r_2 <= h_2:
+        temp.append(list_2[r_2])
+        r_2 += 1
+
+    return temp
+
+
 def merge_sort(list_of: list, merge_func=merge):
     siz = len(list_of)
 

@@ -2,10 +2,12 @@ from unittest import TestCase
 from dictionary_compression import compress_dictionary, decompress_dictionary
 from search_engine import SearchEngine
 from tools import *
+from random import randint
 
 import dictionary_compression as dc
 import posting_list_compression as plc
 import correctness_filter as cf
+from word_info import WordInfo
 
 
 class TestPostingListCompression(TestCase):
@@ -199,6 +201,146 @@ class TestTools(TestCase):
         temp = list(range(0, 10))
         temp1 = list(range(0, 10))
         print(merge_lists(temp, temp1))
+
+
+class TestTDIDF(TestCase):
+
+    def test_get_words_from_dict(self):
+        from tdidf import get_words_from_dict
+        temp = get_words_from_dict()
+        self.assertIsNotNone(temp)
+        self.assertTrue(isinstance(temp, list))
+        print(f'test_get_words_from_dict is successful.')
+
+    def test_get_addr_and_name(self):
+        from tdidf import get_addr_and_name
+        from tdidf import POSTING_LIST_SAVING_PATH_NAME, posting_list_segment_name, posting_list_name_file
+        from tdidf import get_words_from_dict
+        from os import listdir, sep
+
+        w = get_words_from_dict()[0]
+        addr, name = get_addr_and_name(w)
+        self.assertEqual(POSTING_LIST_SAVING_PATH_NAME + sep + posting_list_segment_name(w),
+                         addr)
+        self.assertEqual(name, posting_list_name_file(w))
+        self.assertTrue(name in listdir(addr))
+
+        print(f'{self.test_get_addr_and_name.__name__} is successful.')
+
+        return addr, name
+
+    def test_get_docs(self):
+        from tdidf import get_docs
+        addr, name = self.test_get_addr_and_name()
+        print(get_docs(addr, name))
+
+    def test_compress_weights(self):
+        from tdidf import compress_weights
+        numbers = [0, 3072, 3092, 1, 0, 2621460, 78, 6]
+        numbers_in_bytes = [b'\x00',
+                            b'\x02', b'\x0C\x00',
+                            b'\x02', b'\x0C\x14',
+                            b'\x01', b'\x01',
+                            b'\x00',
+                            b'\x03', b'\x28\x00\x14',
+                            b'\x01', b'\x4E',
+                            b'\x01', b'\x06']
+        stream_bytes = bytes()
+        for b in numbers_in_bytes:
+            stream_bytes += b
+
+        self.assertEqual(stream_bytes, compress_weights(numbers))
+
+    def test_decompress_weights(self):
+        from tdidf import compress_weights, decompress_weights
+        from random import randint
+        numbers = [0, 3072, 3092, 1, 0, 2621460, 78, 6]
+
+        self.assertEqual(numbers,
+                         decompress_weights(compress_weights(numbers)))
+
+        numbers = list(randint(0, 3000000) for _ in range(100))
+        self.assertEqual(numbers,
+                         decompress_weights(compress_weights(numbers)))
+
+    def test_save_and_load_weights(self):
+        from os import makedirs, removedirs, remove, listdir, sep
+        from tdidf import save_weights, load_weights
+        from random import randint
+
+        numbers = list(randint(0, 3000000) for _ in range(100))
+
+        addr = f'{self.test_get_addr_and_name.__name__}'
+        word = 'word'
+
+        makedirs(addr, exist_ok=True)
+        save_weights(addr, word, numbers)
+
+        try:
+            self.assertEqual(numbers, load_weights(addr, word))
+        except Exception as e:
+            print(e)
+
+        for f in listdir(addr):
+            remove(addr + sep + f)
+        removedirs(addr)
+
+    def test_calculate_all_score_of_posting_list(self):
+        from tdidf import calculate_all_score_of_posting_list
+        calculate_all_score_of_posting_list()
+
+
+class TestWordInfo(TestCase):
+
+    def test_word_info_class(self):
+        self._word = 'word'
+        self._word_info = WordInfo(self._word)
+
+        self.assertEqual(self._word, self._word_info.get_word())
+        self.assertEqual([], self._word_info.get_doc_ids())
+        self.assertEqual([], self._word_info.get_count_each_docs())
+
+        doc_ids = [45, 787, 2, 6, 8, 12, 82, 46]
+        doc_ids.sort()
+        counters = [12, 42, 1, 1, 2, 7, 100, 660]
+
+        for doc_id in doc_ids:
+            self._word_info.add_doc_id(doc_id)
+
+        for i in range(len(counters)):
+            for _ in range(counters[i]-1):
+                self._word_info.plus_counter_of_doc(doc_ids[i])
+
+        self.assertEqual(doc_ids, self._word_info.get_doc_ids())
+        self.assertEqual(counters, self._word_info.get_count_each_docs())
+
+        doc_ids1 = [10, 33, 56, 8, 2342, 2]
+        doc_ids1.sort()
+        counters1 = [1, 7878, 455, 87, 55, 1]
+
+        self._word_info.merge_list(doc_ids1, counters1)
+
+        new_docs = self._word_info.get_doc_ids()
+        new_docs.sort()
+        self.assertEqual(new_docs, self._word_info.get_doc_ids())
+
+        new_counters = self._word_info.get_count_each_docs()
+
+        join_counters = [13, 42, 7879, 455, 1, 87, 2, 7, 55, 100, 660, 1]
+        join_docs = doc_ids + doc_ids1
+        join_docs.sort()
+        for i in range(len(doc_ids) + len(doc_ids1)):
+            index = new_docs.index(join_docs[i])
+            self.assertEqual(join_counters[index], new_counters[index])
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':

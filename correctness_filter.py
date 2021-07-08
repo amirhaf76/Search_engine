@@ -207,10 +207,12 @@ def imperative_verb_detector(verb: str, roots: list):
 def merge_keys(old: str, new: str, words_dict: dict):
 
     if words_dict.__contains__(new) and words_dict.__contains__(old):
-        words_dict[new] = merge_lists(words_dict[new], words_dict[old])
-
+        # words_dict[new] = merge_lists(words_dict[new], words_dict[old])
+        words_dict[new].merge_list(words_dict[old].get_doc_ids(),
+                                   words_dict[old].get_count_each_docs())
     else:
         words_dict[new] = words_dict[old]
+        words_dict[new].set_word(new)
 
     words_dict.pop(old, None)
 
@@ -288,7 +290,15 @@ def filter_word(key: str, words_list: list):
 def filter_dictionary(words_dict: dict):
     replaced_keys = list()
 
+    counter = 0
+    siz = len(words_dict)
+
     for key in words_dict.keys():
+
+        counter += 1
+        if counter % 100 == 0:
+            print(f'[Filtering] {int(counter)}/{siz}')
+
         old = key
         new = replace_letters(key)
         if new is not None:
