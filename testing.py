@@ -213,13 +213,13 @@ class TestTDIDF(TestCase):
         print(f'test_get_words_from_dict is successful.')
 
     def test_get_addr_and_name(self):
-        from tdidf import get_addr_and_name
+        from tdidf import get_posting_list_addr_and_name
         from tdidf import POSTING_LIST_SAVING_PATH_NAME, posting_list_segment_name, posting_list_name_file
         from tdidf import get_words_from_dict
         from os import listdir, sep
 
         w = get_words_from_dict()[0]
-        addr, name = get_addr_and_name(w)
+        addr, name = get_posting_list_addr_and_name(w)
         self.assertEqual(POSTING_LIST_SAVING_PATH_NAME + sep + posting_list_segment_name(w),
                          addr)
         self.assertEqual(name, posting_list_name_file(w))

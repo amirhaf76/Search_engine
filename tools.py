@@ -162,5 +162,32 @@ def intersection(doc_ids_lists: list, similarity_count=None):
     return found_doc_id
 
 
+def heapify(arr: list, n: int, i: int):
+    smallest = i
+
+    right = 2*i + 2
+    left = 2*i + 1
+
+    if right < n and arr[right] < arr[smallest]:
+        smallest = right
+
+    if left < n and arr[left] < arr[smallest]:
+        smallest = left
+
+    if not smallest == i:
+        arr[i], arr[smallest] = arr[smallest], arr[i]
+        heapify(arr, n, smallest)
+
+
+def heap_sort(arr: list):
+
+    for i in range(len(arr)//2 - 1, -1, -1):
+        heapify(arr, len(arr), i)
+
+    for i in range(len(arr) - 1, 0, -1):
+        arr[i], arr[0] = arr[0], arr[i]
+        heapify(arr, i, 0)
+
+
 if __name__ == '__main__':
     pass

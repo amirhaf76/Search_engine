@@ -29,60 +29,67 @@ class SearchEngine:
         :return:
         """
         if len(list_of_terms) == 0:
-            return [], 0
+            return [], SEARCH_ENGINE_LOG[0]
 
         # one word
         elif len(list_of_terms) == 1:
-
-            list_of_terms[0] = filter_word(list_of_terms[0], self.__terms_list)
-
-            if list_of_terms[0] is None:
-                return [], -1
-
-            index = binary_search(list_of_terms[0], self.__terms_list)
-
-            if index is None:
-                return [], -1
-
-            byte_posting_list = load_posting_list(list_of_terms[0])
-            refs = decompress_posting_list(byte_posting_list)
-
-            return refs, 1
+            return self.search_one_word(list_of_terms[0])
 
         # more than one word
         elif len(list_of_terms) > 1:
-            refs = []
-            for term in list_of_terms:
-
-                term = filter_word(term, self.__terms_list)
-                if term is None:
-                    continue
-
-                index = binary_search(term, self.__terms_list)
-
-                if index is None:
-                    continue
-
-                byte_posting_list = load_posting_list(term)
-
-                refs.append(
-                    (term, decompress_posting_list(byte_posting_list))
-                )
-
-            if len(refs) == 0:
-                return [], -1
-
-            res = intersection(
-                list(map(lambda t: t[1], refs))
-            )
-
-            if len(res) == 0:
-                return res, 2
-
-            return res, 1
+            return self.search_multi_word(list_of_terms)
 
     def show(self):
         return self.__terms_list
+
+    def search_one_word(self, term: str):
+        term = filter_word(term, self.__terms_list)
+
+        if term is None:
+            return [], SEARCH_ENGINE_LOG[-1]
+
+        index = binary_search(term, self.__terms_list)
+
+        if index is None:
+            return [], SEARCH_ENGINE_LOG[-1]
+
+        # byte_posting_list = load_posting_list(list_of_terms[0])
+        # refs = decompress_posting_list(byte_posting_list)
+        refs = load_posting_list(term)
+
+        return refs, 1
+
+    def search_multi_word(self, list_of_terms: list):
+        refs = []
+        for term in list_of_terms:
+
+            term = filter_word(term, self.__terms_list)
+            if term is None:
+                continue
+
+            index = binary_search(term, self.__terms_list)
+
+            if index is None:
+                continue
+
+            # byte_posting_list = load_posting_list(term)
+
+            refs.append(
+                # (term, decompress_posting_list(byte_posting_list))
+                (term, load_posting_list(term))
+            )
+
+        if len(refs) == 0:
+            return [], -1
+
+        res = intersection(
+            list(map(lambda t: t[1], refs))
+        )
+
+        if len(res) == 0:
+            return res, 2
+
+        return res, 1
 
 
 if __name__ == '__main__':

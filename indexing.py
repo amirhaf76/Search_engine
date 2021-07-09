@@ -18,6 +18,8 @@ DICTIONARY_SAVING_PATH_NAME = 'dict_list'
 DICTIONARY_AS_STR_NAME = 'dict_as_str'
 DICTIONARY_INFO_NAME = 'dict_info'
 
+DOCS_SIZ_FILE_NAME = 'docs_siz'
+
 
 def posting_list_name_file(term: str):
     return f'{term}_posting_list'
@@ -168,7 +170,8 @@ def load_posting_list(term: str):
     except IOError:
         print(f'[Search Engine][Error] {term} file isn\'t available!')
 
-    return bytearray(posting_list)
+    # return bytearray(posting_list)
+    return decompress_posting_list(bytearray(posting_list))
 
 
 def compress_weights(list_of_int: list):
@@ -215,6 +218,30 @@ def decompress_weights(stream_bytes: bytes):
         curr_p += siz + 1
 
     return numbers
+
+
+def save_docs_siz(list_of_id_siz: list):
+
+    nums = []
+    for doc_id, siz in list_of_id_siz:
+        nums.append(doc_id)
+        nums.append(siz)
+
+    with open(DOCS_SIZ_FILE_NAME, 'wb') as out:
+        out.write(compress_weights(nums))
+
+
+def load_docs_siz():
+    with open(DOCS_SIZ_FILE_NAME, 'rb') as fin:
+        nums = decompress_weights(fin.read())
+
+    res = []
+    for i in range(0, len(nums)-1, 2):
+        res.append(
+            (nums[i], nums[i+1])
+        )
+
+    return res
 
 
 def save_weights(addr: str, term: str, number_list: list):
