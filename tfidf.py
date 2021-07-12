@@ -9,7 +9,7 @@ from posting_list_compression import decompress_posting_list
 from dictionary_compression import decompress_dictionary
 
 
-def calculate_tdidf(tf: int, df: int, number_of_docs: int) -> float:
+def calculate_tfidf(tf: int, df: int, number_of_docs: int) -> float:
     """
 
     :param tf: term frequency
@@ -63,30 +63,34 @@ def cosine_score(q_terms: list, doc_siz):
     lengths = dict()
 
     for q in q_terms:
-        weight_list_addr, weight_list_name = get_weights_addr_and_name(q)
+        try:
+            weight_list_addr, weight_list_name = get_weights_addr_and_name(q)
+            q_posting_list = load_posting_list(q)
+            q_posting_list_siz = len(q_posting_list)
+            q_weights = load_weights(weight_list_addr, q)
 
-        q_posting_list = load_posting_list(q)
-        q_posting_list_siz = len(q_posting_list)
-        q_weights = load_weights(weight_list_addr, weight_list_name)
-
-        q_weight_in_query = calculate_tdidf(q_terms.count(q), q_posting_list_siz, SOURCE_NUMBER)
+            q_weight_in_query = calculate_tfidf(q_terms.count(q), q_posting_list_siz, SOURCE_NUMBER)
+        except IOError as e:
+            print('[Error]')
+            print(e)
+            continue
 
         for i in range(q_posting_list_siz):
             if scores.__contains__(q_posting_list[i]):
-                scores[q_posting_list[i]] += calculate_tdidf(
+                scores[q_posting_list[i]] += calculate_tfidf(
                     q_weights[i],
                     q_posting_list_siz,
                     SOURCE_NUMBER
                 ) * q_weight_in_query
             else:
-                scores[q_posting_list[i]] = calculate_tdidf(
+                scores[q_posting_list[i]] = calculate_tfidf(
                     q_weights[i],
                     q_posting_list_siz,
                     SOURCE_NUMBER
                 ) * q_weight_in_query
 
     for i in scores.keys():
-        lengths[i] = doc_siz[i-1]
+        lengths[i] = doc_siz[i]
 
     for key in scores.keys():
         scores[key] = scores[key]/lengths[key]
