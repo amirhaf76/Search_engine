@@ -1,4 +1,3 @@
-
 def binary_search(e, list_of_e: list):
     rear = 0
     head = len(list_of_e) - 1
@@ -7,7 +6,7 @@ def binary_search(e, list_of_e: list):
         if head < rear:
             return None
 
-        centre = int((head + rear)/2)
+        centre = int((head + rear) / 2)
 
         if list_of_e[centre] == e:
             return centre
@@ -42,7 +41,7 @@ def merge(list_of: list, r_1, h_1, r_2, h_2):
         temp.append(list_of[r_2])
         r_2 += 1
 
-    list_of[start: h_2+1] = temp
+    list_of[start: h_2 + 1] = temp
 
 
 def merge_lists(list_1: list, list_2: list, repetition=False):
@@ -119,9 +118,9 @@ def merge_sort(list_of: list, merge_func=merge):
 
         while True:
 
-            if block_r + 2*blk_siz - 1 < siz:
-                merge_func(list_of, block_r, block_r + blk_siz - 1, block_r + blk_siz, block_r + 2*blk_siz - 1)
-                block_r += 2*blk_siz
+            if block_r + 2 * blk_siz - 1 < siz:
+                merge_func(list_of, block_r, block_r + blk_siz - 1, block_r + blk_siz, block_r + 2 * blk_siz - 1)
+                block_r += 2 * blk_siz
                 continue
 
             elif block_r + blk_siz < siz:
@@ -134,7 +133,6 @@ def merge_sort(list_of: list, merge_func=merge):
 
 
 def intersection(doc_ids_lists: list, similarity_count=None):
-
     comparison = list()
     found_doc_id = []
 
@@ -163,30 +161,61 @@ def intersection(doc_ids_lists: list, similarity_count=None):
 
 
 def heapify(arr: list, n: int, i: int):
+    largest = i
+
+    right = 2 * i + 2
+    left = 2 * i + 1
+
+    if right < n and arr[right] > arr[largest]:
+        largest = right
+
+    if left < n and arr[left] > arr[largest]:
+        largest = left
+
+    if not largest == i:
+        arr[i], arr[largest] = arr[largest], arr[i]
+        heapify(arr, n, largest)
+
+
+def heapify_tuple(arr: list, n: int, i: int, e: int):
     smallest = i
 
-    right = 2*i + 2
-    left = 2*i + 1
+    right = 2 * i + 2
+    left = 2 * i + 1
 
-    if right < n and arr[right] < arr[smallest]:
+    if right < n and arr[right][e] > arr[smallest][e]:
         smallest = right
 
-    if left < n and arr[left] < arr[smallest]:
+    if left < n and arr[left][e] > arr[smallest][e]:
         smallest = left
 
     if not smallest == i:
         arr[i], arr[smallest] = arr[smallest], arr[i]
-        heapify(arr, n, smallest)
+        heapify_tuple(arr, n, smallest, e)
 
 
-def heap_sort(arr: list):
+def heap_sort(arr: list, k=0):
+    if k < 1 or k > len(arr):
+        k = len(arr)
 
-    for i in range(len(arr)//2 - 1, -1, -1):
+    for i in range(len(arr) // 2 - 1, -1, -1):
         heapify(arr, len(arr), i)
 
-    for i in range(len(arr) - 1, 0, -1):
+    for i in range(len(arr) - 1, len(arr) - 1 - k, -1):  # len(arr) - 1 - k + 1 - 1
         arr[i], arr[0] = arr[0], arr[i]
         heapify(arr, i, 0)
+
+
+def heap_sort_tuple(arr: list, e: int, k=0):
+    if k < 1 or k > len(arr):
+        k = len(arr)
+
+    for i in range(len(arr) // 2 - 1, -1, -1):
+        heapify_tuple(arr, len(arr), i, e)
+
+    for i in range(len(arr) - 1, len(arr) - 1 - k, -1):  # len(arr) - 1 - k + 1 - 1
+        arr[i], arr[0] = arr[0], arr[i]
+        heapify_tuple(arr, i, 0, e)
 
 
 if __name__ == '__main__':
