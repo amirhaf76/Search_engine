@@ -1,3 +1,3 @@
-# Persian language search engine
+# Persian Language Search Engine
 
-The search engine returns results by finding the desired content and sorting it based on content relevance.
+Developed a search engine to retrieve content and rank results based on relevance
